@@ -6,7 +6,8 @@ var createCoffeePreprocessor = function(args, config, logger, helper) {
   var log = logger.create('preprocessor.coffee');
   var defaultOptions = {
     bare: true,
-    sourceMap: false
+    sourceMap: false,
+    includePaths: []
   };
   var options = helper.merge(defaultOptions, args.options || {}, config.options || {});
 
@@ -15,6 +16,21 @@ var createCoffeePreprocessor = function(args, config, logger, helper) {
   };
 
   return function(content, file, done) {
+    var includePaths = config.options.includePaths;
+    if(includePaths && includePaths.length) {
+        var matched = false;
+        for(var i=0; i<includePaths.length; i++) {
+            if(file.originalPath.match(includePaths[i])) {
+                matched = true;
+                break;
+            }
+        }
+        if(!matched){
+            log.debug('Skipping "%s".', file.originalPath);
+            done(null, content);
+            return;
+        }
+    }
     var result = null;
     var map;
     var datauri;
